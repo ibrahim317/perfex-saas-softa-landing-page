@@ -23,8 +23,7 @@ function landing_pages_activate()
 
 function landing_pages_deactivate()
 {
-    // Clean up options if needed (optional)
-    // delete_option('landing_pages_enabled');
+    add_option('landing_pages_enabled', '0');
 }
 
 // No admin menu needed for simple static pages
