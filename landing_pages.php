@@ -18,12 +18,12 @@ register_deactivation_hook('landing_pages', 'landing_pages_deactivate');
 function landing_pages_activate()
 {
     // Simple activation - no options needed
-    add_option('landing_pages_enabled', '1');
+    update_option('landing_pages_enabled', '1');
 }
 
 function landing_pages_deactivate()
 {
-    add_option('landing_pages_enabled', '0');
+    update_option('landing_pages_enabled', '0');
 }
 
 // No admin menu needed for simple static pages
