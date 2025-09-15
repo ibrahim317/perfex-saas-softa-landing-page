@@ -1,12 +1,34 @@
 // Utility Functions
 function formatPrice(v) {
     const n = Number(v || 0);
-    return n === 0 ? 'Free' : `$${n}`;
+    return n === 0 ? 'Free' : `EGP${n}`;
 }
 
 function escapeHtml(str) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
     return String(str).replace(/[&<>"']/g, s => map[s]);
+}
+
+// Minimal HTML sanitizer for plan descriptions (allow basic formatting only)
+function sanitizeAllowedHtml(html) {
+    const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI']);
+    const container = document.createElement('div');
+    container.innerHTML = String(html || '');
+
+    container.querySelectorAll('script, style').forEach(n => n.remove());
+
+    const elements = container.querySelectorAll('*');
+    elements.forEach(el => {
+        if (!allowed.has(el.tagName)) {
+            const parent = el.parentNode;
+            while (el.firstChild) parent.insertBefore(el.firstChild, el);
+            parent.removeChild(el);
+            return;
+        }
+        [...el.attributes].forEach(attr => el.removeAttribute(attr.name));
+    });
+
+    return container.innerHTML;
 }
 
 // Smooth Scrolling for Navigation Links
@@ -125,11 +147,16 @@ function initSaasPackages() {
                 card.className = 'pricing-card bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300';
 
                 const name = escapeHtml(plan.name || 'Plan');
-                const description = escapeHtml(plan.description || '');
+                const rawDescription = plan.description || '';
+                const descriptionHtml = /<[a-z][\s\S]*>/i.test(rawDescription)
+                    ? sanitizeAllowedHtml(rawDescription)
+                    : `<p>${escapeHtml(rawDescription)}</p>`;
                 const price = typeof plan.price === 'number' ? `$${plan.price}` : 'Contact Us';
                 const isDefault = plan.is_default ? '<span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Popular</span>' : '';
 
-                const features = Array.isArray(plan.modules) ? plan.modules.slice(0, 6) : [];
+                const features = Array.isArray(plan.module_names) && plan.module_names.length
+                    ? plan.module_names.slice(0, 6)
+                    : (Array.isArray(plan.modules) ? plan.modules.slice(0, 6) : []);
 
                 const registerUrl = `${window.APP_BASE_URL_DEFAULT}authentication/register`;
                 const planParam = window.PERFEX_SAAS_PLAN_PARAM || 'plan';
@@ -140,7 +167,7 @@ function initSaasPackages() {
                         <h3 class="text-2xl font-bold text-gray-900">${name}</h3>
                         ${isDefault}
                     </div>
-                    <p class="text-gray-600 mb-6">${description}</p>
+                    <div class="text-gray-600 mb-6">${descriptionHtml}</div>
                     <div class="text-5xl font-extrabold text-gray-900 mb-6">${price}
                         <span class="text-base text-gray-500 font-medium">/mo</span>
                     </div>

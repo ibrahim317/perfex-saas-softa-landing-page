@@ -51,10 +51,35 @@ class Api extends App_Controller
                 $_packages = [$_packages];
             }
 
+            // Build module slug => display name map
+            $modules_map = [];
+            $all_modules = $this->perfex_saas_model->modules();
+            foreach ($all_modules as $m) {
+                $system = $m['system_name'] ?? '';
+                $custom = $m['custom_name'] ?? $system;
+                $modules_map[$system] = _l($custom, '', false);
+            }
+
             $package_list = [];
+            // Filter out "surveys" from all package modules
+            foreach ($_packages as $pkg) {
+                if (isset($pkg->modules) && is_array($pkg->modules)) {
+                    $pkg->modules = array_values(array_filter($pkg->modules, function($mod) {
+                        return strtolower($mod) !== 'surveys';
+                    }));
+                }
+            }
             foreach ($_packages as $pkg) {
                 if (!$pkg) { continue; }
                 $metadata = is_object($pkg->metadata ?? null) ? $pkg->metadata : (object)[];
+
+                $module_slugs = is_array($pkg->modules ?? null) ? $pkg->modules : [];
+                $module_names = [];
+                foreach ($module_slugs as $slug) {
+                    if (empty($slug)) continue;
+                    $module_names[] = isset($modules_map[$slug]) ? $modules_map[$slug] : ucwords(str_replace('_', ' ', (string)$slug));
+                }
+
                 $package_list[] = [
                     'id' => (int)($pkg->id ?? 0),
                     'name' => (string)($pkg->name ?? ''),
@@ -66,7 +91,8 @@ class Api extends App_Controller
                     'is_private' => (bool)($pkg->is_private ?? false),
                     'db_scheme' => (string)($pkg->db_scheme ?? ''),
                     'status' => (string)($pkg->status ?? ''),
-                    'modules' => is_array($pkg->modules ?? null) ? $pkg->modules : [],
+                    'modules' => $module_slugs,
+                    'module_names' => $module_names,
                     'metadata' => [
                         'invoice' => $metadata->invoice ?? '',
                         'max_instance_limit' => (int)($metadata->max_instance_limit ?? 0),
@@ -81,7 +107,7 @@ class Api extends App_Controller
             header('Content-Type: application/json');
             set_status_header(200);
             echo json_encode($package_list);
-                 
+                
         } catch (Throwable $th) {
             return $this->respond_json(['error' => $th->getMessage()], 500);
         }

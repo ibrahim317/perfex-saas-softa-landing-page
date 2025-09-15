@@ -76,24 +76,20 @@ class LanguageManager {
         const translatableElements = document.querySelectorAll('[data-en][data-ar]');
         
         translatableElements.forEach(element => {
-            const englishText = element.getAttribute('data-en');
-            const arabicText = element.getAttribute('data-ar');
-            
-            if (this.currentLanguage === 'ar') {
-                // Handle HTML content for Arabic
-                if (element.tagName === 'H1' && element.innerHTML.includes('<br>')) {
-                    // Special handling for hero title with line breaks
-                    element.innerHTML = arabicText;
-                } else {
-                    element.textContent = arabicText;
-                }
+            const englishText = element.getAttribute('data-en') || '';
+            const arabicText = element.getAttribute('data-ar') || '';
+            const allowHtml = element.getAttribute('data-html') === 'true' || /<[a-z][\s\S]*>/i.test(englishText) || /<[a-z][\s\S]*>/i.test(arabicText);
+
+            const content = this.currentLanguage === 'ar' ? arabicText : englishText;
+
+            if (allowHtml) {
+                element.innerHTML = content;
             } else {
-                // Handle HTML content for English
-                if (element.tagName === 'H1' && element.innerHTML.includes('<br>')) {
-                    // Special handling for hero title with line breaks
-                    element.innerHTML = englishText;
+                // Special handling for hero title with <br>
+                if (element.tagName === 'H1' && (englishText.includes('<br>') || arabicText.includes('<br>'))) {
+                    element.innerHTML = content;
                 } else {
-                    element.textContent = englishText;
+                    element.textContent = content;
                 }
             }
         });
