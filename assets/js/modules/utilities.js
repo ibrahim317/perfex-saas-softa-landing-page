@@ -151,7 +151,7 @@ function initSaasPackages() {
                 const descriptionHtml = /<[a-z][\s\S]*>/i.test(rawDescription)
                     ? sanitizeAllowedHtml(rawDescription)
                     : `<p>${escapeHtml(rawDescription)}</p>`;
-                const price = typeof plan.price === 'number' ? `$${plan.price}` : 'Contact Us';
+                const price = typeof plan.price === 'number' ? `EGP ${plan.price}` : 'Contact Us';
                 const isDefault = plan.is_default ? '<span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Popular</span>' : '';
 
                 const features = Array.isArray(plan.module_names) && plan.module_names.length
