@@ -1,0 +1,1266 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Documentation",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://softa.proeasehup.com/"
+        }
+    ],
+    "paths": {
+        "/saas/api/index": {
+            "get": {
+                "tags": [
+                    "Health Check"
+                ],
+                "summary": "Health Check",
+                "description": "Returns OK if the API is reachable",
+                "operationId": "e4971461a73e8b3516905f6fed7ac65e",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/saas/api/caddy_domain_check": {
+            "get": {
+                "tags": [
+                    "Utility"
+                ],
+                "summary": "Check if a domain is recognized by the system",
+                "description": "Returns 404 if no match, 200 (OK) if same as base domain, and 200 (Matched) when a match is found (subdomain or custom domain)",
+                "operationId": "36240eee0800f32db7719c460a62f909",
+                "parameters": [
+                    {
+                        "name": "domain",
+                        "in": "query",
+                        "description": "The domain to check",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Match status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "OK or Matched"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No domain match"
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing domain parameter"
+                    }
+                }
+            }
+        },
+        "/saas/api/is_slug_available/{slug}": {
+            "get": {
+                "tags": [
+                    "Utility"
+                ],
+                "summary": "Check for slug availability",
+                "operationId": "70d7e27189579fbe0e8637c7f45c7fe8",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "The slug to check",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Slug availability result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "available": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/saas/api/is_custom_domain_available/{domain}": {
+            "get": {
+                "tags": [
+                    "Utility"
+                ],
+                "summary": "Check if a custom domain is available for use by the client.",
+                "operationId": "e5992f97b2a93c61e51ef4b25eb8439a",
+                "parameters": [
+                    {
+                        "name": "domain",
+                        "in": "path",
+                        "description": "The domain to check",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "description": "Client ID. Should be provided when not using session (i.e outside client portal). Provide to check is relative for a specific user for cases of updating.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Domain availability status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "available": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/saas/api/settings": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get the list of essential settings.",
+                "operationId": "70a7f0552f4d2d32b08f1bfb86237913",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "Object containing settings key and value. Value will be string or json string",
+                                    "properties": {
+                                        "settings_key": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "perfex_saas_enable_single_package_mode": "0",
+                                    "perfex_saas_enable_auto_trial": "0",
+                                    "perfex_saas_require_invoice_payment_status": "[\"4\"]"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/settings/modules": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get the modules list with marketplace information",
+                "operationId": "f2d9ab04308a0ec5983f7aff81b3d1d9",
+                "responses": {
+                    "200": {
+                        "description": "A list of modules with marketplace information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "system_name": {
+                                            "properties": {
+                                                "custom_name": {
+                                                    "description": "The custom name of the module",
+                                                    "type": "string"
+                                                },
+                                                "price": {
+                                                    "description": "The default price of the module. Get package specific from the package list endpoint.",
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "image": {
+                                                    "description": "The image URL of the module",
+                                                    "type": "string",
+                                                    "format": "url"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/settings/services": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get the service list with marketplace information",
+                "operationId": "3686f604790aeb739f23465478877202",
+                "responses": {
+                    "200": {
+                        "description": "A list of services with marketplace information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "service_id": {
+                                            "properties": {
+                                                "name": {
+                                                    "description": "The name of the service",
+                                                    "type": "string"
+                                                },
+                                                "billing_mode": {
+                                                    "description": "The billing mode of the service",
+                                                    "type": "string"
+                                                },
+                                                "price": {
+                                                    "description": "The price of the service. Get package specific from the package list endpoint.",
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "image": {
+                                                    "description": "The image URL of the service",
+                                                    "type": "string",
+                                                    "format": "url"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/plans": {
+            "get": {
+                "tags": [
+                    "Plan"
+                ],
+                "summary": "Retrieve packages list. Filterable by package id as query",
+                "operationId": "7da54ba332a6c9a484dc88ec2c8700da",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Optional package/plan id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of pricing plans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PricingPlan"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/tenants": {
+            "get": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Retrieve tenants information. Filterable by tenant id as query",
+                "operationId": "bd1f1889ffe73632f41d8ade3f829cb6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Optional tenant ID",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "description": "Optional client ID to limit list to a particular client",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 1000
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of tenants",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tenant"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/create_tenant/{client_id}": {
+            "post": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Create a new tenant instance",
+                "operationId": "a93489688f1dce9bace6e4f67540f069",
+                "parameters": [
+                    {
+                        "name": "client_id",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TenantCreateRequest"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TenantCreateRequest"
+                            },
+                            "example": {
+                                "name": "Ulutfa Tech",
+                                "slug": "ulutfacrm",
+                                "custom_domain": "ulutfacrm.com"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created tenant details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "string",
+                                            "example": "Tenant created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/update_tenant/{client_id}/{tenant_id}": {
+            "post": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Update tenant details",
+                "operationId": "5e1ff08beb2d18948264de15d9cda00e",
+                "parameters": [
+                    {
+                        "name": "client_id",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tenant_id",
+                        "in": "path",
+                        "description": "Tenant ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TenantUpdateRequest"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TenantUpdateRequest"
+                            },
+                            "example": {
+                                "name": "Ulutfa Tech",
+                                "custom_domain": "ulutfacrm.com",
+                                "disabled_modules": [
+                                    "surveys",
+                                    "theme_style"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated tenant details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "string",
+                                            "example": "Tenant updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/delete_tenant/{tenant_id}": {
+            "delete": {
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Delete a tenant",
+                "operationId": "6fdd6d9bccb4bc984592bd0159d0de7c",
+                "parameters": [
+                    {
+                        "name": "tenant_id",
+                        "in": "path",
+                        "description": "ID of the tenant to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message with details of deletion",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "string",
+                                            "example": "Company deleted"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing tenant ID"
+                    },
+                    "404": {
+                        "description": "Not Found: Tenant not found"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/subscribe/{clientid}/{packageslug}": {
+            "post": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Subscribe a client to a plan/package",
+                "operationId": "9d7c6dd47ea38255e65da0f256a5b5cf",
+                "parameters": [
+                    {
+                        "name": "clientid",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "packageslug",
+                        "in": "path",
+                        "description": "Package slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionSuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/update_subscription/{clientid}": {
+            "post": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Update subscription details for a client",
+                "operationId": "4c8d3e977dc9fa1a0f4e368a9796ae8d",
+                "parameters": [
+                    {
+                        "name": "clientid",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriptionUpdateRequest"
+                            },
+                            "example": {
+                                "custom_limits": {
+                                    "storage": "30",
+                                    "staff": "2"
+                                },
+                                "purchased_modules": [
+                                    "surveys",
+                                    "theme_styles"
+                                ],
+                                "purchased_services": [
+                                    "serv38843392914",
+                                    "serv3880789877"
+                                ]
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriptionUpdateRequest"
+                            },
+                            "example": {
+                                "custom_limits": {
+                                    "storage": "30",
+                                    "staff": "2"
+                                },
+                                "purchased_modules": [
+                                    "surveys",
+                                    "theme_styles"
+                                ],
+                                "purchased_services": [
+                                    "serv38843392914",
+                                    "serv3880789877"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subscription updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionSuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/cancel_subscription/{clientid}": {
+            "post": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Cancel subscription for a client",
+                "operationId": "95eff4306f6b29041cc686eea37c2cc0",
+                "parameters": [
+                    {
+                        "name": "clientid",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription cancelled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionSuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/saas/api/resume_subscription/{clientid}": {
+            "post": {
+                "tags": [
+                    "Subscription"
+                ],
+                "summary": "Resume cancelled subscription for a client",
+                "operationId": "da7bfbb13f70ba2d582525b528c266bd",
+                "parameters": [
+                    {
+                        "name": "clientid",
+                        "in": "path",
+                        "description": "Client ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription resumed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionSuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StringList": {
+                "properties": {
+                    "value": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "String": {
+                "properties": {
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Object": {
+                "properties": {
+                    "value": {
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "MixedList": {
+                "properties": {
+                    "fields": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/StringList"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/String"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Object"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PricingPlan": {
+                "description": "Pricing Plan details",
+                "properties": {
+                    "id": {
+                        "description": "The unique identifier of the pricing plan",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "The name of the pricing plan",
+                        "type": "string",
+                        "example": "Basic Plan"
+                    },
+                    "description": {
+                        "description": "A brief description of the pricing plan",
+                        "type": "string",
+                        "example": "This is a basic plan for beginners."
+                    },
+                    "slug": {
+                        "description": "The slug for the pricing plan",
+                        "type": "string",
+                        "example": "basic-plan"
+                    },
+                    "price": {
+                        "description": "The price of the pricing plan",
+                        "type": "number",
+                        "format": "float",
+                        "example": 19.99
+                    },
+                    "trial_period": {
+                        "description": "The trial period in days",
+                        "type": "integer",
+                        "example": 14
+                    },
+                    "is_default": {
+                        "description": "Indicates if this is the default pricing plan",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_private": {
+                        "description": "Indicates if this pricing plan is private",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "db_scheme": {
+                        "description": "The database scheme associated with the pricing plan",
+                        "type": "string",
+                        "example": "default_scheme"
+                    },
+                    "status": {
+                        "description": "The status of the pricing plan",
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "modules": {
+                        "description": "List of modules included in the pricing plan",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "module1",
+                            "module2",
+                            "module3"
+                        ]
+                    },
+                    "metadata": {
+                        "description": "Additional metadata for the pricing plan",
+                        "properties": {
+                            "invoice": {
+                                "description": "Invoice details",
+                                "type": "string",
+                                "example": "monthly"
+                            },
+                            "max_instance_limit": {
+                                "description": "Maximum instance limit",
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "limitations": {
+                                "description": "Limitations of the pricing plan",
+                                "type": "object",
+                                "example": {
+                                    "invoice": "10",
+                                    "estimate": "20"
+                                }
+                            },
+                            "enable_subdomain": {
+                                "description": "Indicates if subdomains are enabled",
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "enable_custom_domain": {
+                                "description": "Indicates if custom domains are enabled",
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "shared_settings": {
+                                "description": "Shared settings for the pricing plan",
+                                "type": "object",
+                                "example": {
+                                    "setting1": "value1",
+                                    "setting2": "value2"
+                                },
+                                "additionalProperties": true
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Tenant": {
+                "title": "Tenant",
+                "description": "Details of a tenant",
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier for the tenant",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "clientid": {
+                        "description": "Client ID of the tenant",
+                        "type": "integer",
+                        "example": 101
+                    },
+                    "name": {
+                        "description": "Name of the tenant",
+                        "type": "string",
+                        "example": "Example Corp"
+                    },
+                    "slug": {
+                        "description": "Slug of the tenant",
+                        "type": "string",
+                        "example": "example-corp"
+                    },
+                    "custom_domain": {
+                        "description": "Custom domain of the tenant",
+                        "type": "string",
+                        "example": "example.com"
+                    },
+                    "status": {
+                        "description": "Status of the tenant",
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "disabled",
+                            "banned",
+                            "pending",
+                            "deploying",
+                            "pending-delete"
+                        ],
+                        "example": "active"
+                    },
+                    "status_note": {
+                        "description": "Status note of the tenant",
+                        "type": "string",
+                        "example": "Ready for deployment"
+                    },
+                    "dsn": {
+                        "description": "DSN of the tenant",
+                        "type": "string",
+                        "example": "mysql://username:password@hostname:3306/database"
+                    },
+                    "accessible_url_list": {
+                        "description": "List of accessible URLs for the tenant",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://example.com"
+                        }
+                    },
+                    "metadata": {
+                        "description": "Additional metadata of the tenant",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "example": "value"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "created_at": {
+                        "description": "Date and time when the tenant was created",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-06-24 15:30:00"
+                    },
+                    "updated_at": {
+                        "description": "Date and time when the tenant was last updated",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-06-25 09:45:00"
+                    }
+                },
+                "type": "object"
+            },
+            "TenantCreateRequest": {
+                "properties": {
+                    "name": {
+                        "description": "The company name",
+                        "type": "string"
+                    },
+                    "slug": {
+                        "description": "The tenant slug or subdomain id",
+                        "type": "string"
+                    },
+                    "custom_domain": {
+                        "description": "The tenant custom domain",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "TenantUpdateRequest": {
+                "properties": {
+                    "name": {
+                        "description": "The company name",
+                        "type": "string"
+                    },
+                    "custom_domain": {
+                        "description": "The tenant custom domain",
+                        "type": "string"
+                    },
+                    "disabled_modules": {
+                        "description": "The tenant disabled modules",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SubscriptionUpdateRequest": {
+                "properties": {
+                    "custom_limits": {
+                        "description": "The new limit structure. Object containing limit name and new value. See the my account form in client portal.\n *         When sending using application/x-www-form-urlencoded, ensure your custom_limits is rightly encode i.e custom_limits[staff]=30&custom_limits[storage]=50 ...\n *         See the client package customization form for better understanding of the structure. Both the form and this endpoint use same request format.\n *         Patching is allowed for this property. Set the resources value to zero to remove from the invoice extra units.",
+                        "properties": {
+                            "staff": {
+                                "type": "string",
+                                "example": "30"
+                            },
+                            "storage": {
+                                "description": "New storage value in MB",
+                                "type": "string",
+                                "example": "500"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "purchased_modules": {
+                        "description": "The tenant purchased modules. \n *         Patching is not allowed. Send the complete list of purchased modules for the tenant. (i.e you might need to merge with older purchased module if buying new extra module)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "purchased_services": {
+                        "description": "The tenant purchased services. \n *         Patching is not allowed. Send the complete list of purchased services for the tenant. (i.e you need to merge with old service if buying new extra services)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SuccessResponse": {
+                "description": "General response structure for non list success endpoint",
+                "properties": {
+                    "success": {
+                        "description": "The success message",
+                        "type": "string",
+                        "example": "Created successfully"
+                    },
+                    "redirect": {
+                        "description": "Url to be redirected to if any (optional)",
+                        "type": "string",
+                        "example": "https://demo.com/compolete/some/action"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "description": "General response structure for common errors (non 200 status).",
+                "properties": {
+                    "error": {
+                        "description": "The error message.",
+                        "type": "string",
+                        "example": "An error occurred"
+                    },
+                    "redirect": {
+                        "description": "Url to be redirected to if any (optional) i.e https://demo.com/compolete/some/action",
+                        "type": "string",
+                        "example": ""
+                    }
+                },
+                "type": "object"
+            },
+            "SubscriptionSuccessResponse": {
+                "description": "Subscription response structure for success calls. redirect and success property can be empty. package and invoice will always be set.",
+                "properties": {
+                    "success": {
+                        "type": "string"
+                    },
+                    "redirect": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "action_url": {
+                        "description": "(Optional) Action url to complete the subscription. i.e stripe checkout. You can direct user to this URL in webview client or use stripe_session_id instead.",
+                        "type": "string",
+                        "example": ""
+                    },
+                    "stripe_session_id": {
+                        "description": "(Optional) Stripe session id when using stripe subscription on the package. You can redirect the user from stripe SDK client.",
+                        "type": "string",
+                        "example": ""
+                    },
+                    "package": {
+                        "$ref": "#/components/schemas/PricingPlan"
+                    },
+                    "invoice": {
+                        "$ref": "#/components/schemas/MixedList"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "responses": {
+            "Success": {
+                "description": "Success",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "ServerError": {
+                "description": "default",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "api_key": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Health Check",
+            "description": "Health Check"
+        },
+        {
+            "name": "Utility",
+            "description": "Utility"
+        },
+        {
+            "name": "Config",
+            "description": "Config"
+        },
+        {
+            "name": "Plan",
+            "description": "Plan"
+        },
+        {
+            "name": "Tenants",
+            "description": "Tenants"
+        },
+        {
+            "name": "Subscription",
+            "description": "Subscription"
+        }
+    ]
+}
