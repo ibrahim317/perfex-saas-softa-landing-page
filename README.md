@@ -1,93 +1,65 @@
-# Landing Pages Module
+# Landing Pages API Module
 
-A simple landing pages module for Perfex CRM that provides basic static pages for your website.
+This module provides API endpoints for landing page functionality.
 
 ## Features
 
-- **Landing Page**: Simple home page with login/register buttons
-- **Terms & Conditions**: Basic terms and conditions page
-- **Privacy Policy**: Basic privacy policy page
-- **About Us**: Company information page
-- **Contact Page**: Contact information and form
-- **Simple Routing**: Clean URLs with automatic redirects
+- **SaaS Packages API**: Provides SaaS packages data for landing pages
+- **Clean API-only structure**: No unnecessary controllers, views, or assets
+- **Lightweight**: Minimal footprint with only essential API functionality
+
+## API Endpoints
+
+### GET /landing_pages_api/api/plans
+
+Returns SaaS packages data for landing pages.
+
+**Parameters:**
+- `id` (optional): Specific package ID to retrieve
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Basic Plan",
+    "description": "Basic package description",
+    "slug": "basic",
+    "price": 29.99,
+    "trial_period": 14,
+    "is_default": false,
+    "is_private": false,
+    "db_scheme": "basic",
+    "status": "active",
+    "modules": ["crm", "invoicing"],
+    "module_names": ["CRM", "Invoicing"],
+    "metadata": {
+      "invoice": "invoice_template",
+      "max_instance_limit": 1,
+      "limitations": {},
+      "enable_subdomain": true,
+      "enable_custom_domain": false,
+      "shared_settings": []
+    }
+  }
+]
+```
 
 ## Installation
 
-1. Upload the `landing_pages` folder to your `modules/` directory
-2. Go to Admin → Modules and activate the "Landing Pages" module
-3. That's it! Your pages are ready to use.
-
-## URLs
-
-After installation, the following URLs will be available:
-
-- `/` or `/home` - Landing page (redirects to `/landing_pages/home`)
-- `/terms` - Terms and conditions (redirects to `/landing_pages/terms`)
-- `/privacy` - Privacy policy (redirects to `/landing_pages/privacy`)
-- `/about` - About us page (redirects to `/landing_pages/about`)
-- `/contact` - Contact page (redirects to `/landing_pages/contact`)
-
-**Direct Module URLs:**
-- `/landing_pages/home` - Landing page
-- `/landing_pages/terms` - Terms and conditions
-- `/landing_pages/privacy` - Privacy policy
-- `/landing_pages/about` - About us page
-- `/landing_pages/contact` - Contact page
-
-## Customization
-
-### Content
-Edit the view files in `modules/landing_pages/views/` to customize the content:
-
-- `home.php` - Landing page content
-- `terms.php` - Terms and conditions content
-- `privacy.php` - Privacy policy content
-- `about.php` - About us content
-- `contact.php` - Contact page content
-
-### Styling
-The pages use Bootstrap classes and can be styled by adding custom CSS to your theme.
-
-## File Structure
-
-```
-modules/landing_pages/
-├── controllers/
-│   ├── Home.php
-│   ├── Terms.php
-│   ├── Privacy.php
-│   ├── About.php
-│   └── Contact.php
-├── views/
-│   ├── home.php
-│   ├── terms.php
-│   ├── privacy.php
-│   ├── about.php
-│   └── contact.php
-├── language/
-│   └── english/
-│       └── landing_pages_lang.php
-├── landing_pages.php
-└── README.md
-```
+1. Ensure the module is in the `modules/landing_pages_api/` directory
+2. Activate the module through the admin panel
+3. The API endpoints will be available at `/landing_pages_api/api/`
 
 ## Requirements
 
-- Perfex CRM 2.3.0+
-- PHP 7.4+
-- CodeIgniter 3.1.11
+- Perfex CRM with SaaS module
+- API user with name "landing" configured in the SaaS module
 
-## How It Works
+## Version
 
-1. The module uses hooks to intercept requests to clean URLs
-2. When someone visits `/`, `/terms`, etc., they are redirected to the module URLs
-3. The module controllers display simple static content
-4. All content is hardcoded in the view files for easy customization
+1.0.0
 
-## Support
+## Author
 
-This is a simple module designed for basic landing pages. For customization, edit the view files directly.
-
-## License
-
-This module is provided as-is for use with Perfex CRM.
+Softa Software House

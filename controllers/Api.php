@@ -11,7 +11,7 @@ class Api extends App_Controller
     /**
      * Public endpoint to fetch SaaS packages for the landing page
      * Finds API user with name "landing" and proxies to /saas/api/plans with its token
-     * Route: /landing_pages/api/plans
+     * Route: /landing_pages_api/api/plans
      */
     public function plans()
     {

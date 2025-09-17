@@ -1,86 +1,29 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 /*
-Module Name: Landing Pages
-Description: Create beautiful landing pages with terms, privacy policy, about us, and contact pages
+Module Name: Landing Pages API
+Description: API endpoints for landing page functionality - provides SaaS packages data
 Version: 1.0.0
 Author: Softa Software House
 */
 
-define('LANDING_PAGES_MODULE_NAME', 'landing_pages');
+define('LANDING_PAGES_API_MODULE_NAME', 'landing_pages_api');
 $CI = &get_instance();
 
-
 // Register module activation hook
-register_activation_hook('landing_pages', 'landing_pages_activate');
-register_deactivation_hook('landing_pages', 'landing_pages_deactivate');
+register_activation_hook('landing_pages_api', 'landing_pages_api_activate');
+register_deactivation_hook('landing_pages_api', 'landing_pages_api_deactivate');
 
-function landing_pages_activate()
+function landing_pages_api_activate()
 {
     // Simple activation - no options needed
-    update_option('landing_pages_enabled', '1');
+    update_option('landing_pages_api_enabled', '1');
 }
 
-function landing_pages_deactivate()
+function landing_pages_api_deactivate()
 {
-    update_option('landing_pages_enabled', '0');
+    update_option('landing_pages_api_enabled', '0');
 }
 
-// No admin menu needed for simple static pages
-
-// Handle custom routes for landing pages using app_init hook
-hooks()->add_action('app_init', 'landing_pages_handle_routes');
-
-function landing_pages_handle_routes()
-{
-    $CI = &get_instance();
-    
-    // Get the current URI
-    $uri = $CI->uri->uri_string();
-    
-    // Check if landing pages are enabled
-    if (!get_option('landing_pages_enabled')) {
-        return;
-    }
-    
-    // Skip routing for static assets (CSS, JS, images, etc.)
-    if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i', $uri)) {
-        return;
-    }
-    
-    // Skip routing for module assets
-    if (strpos($uri, 'modules/landing_pages/assets/') !== false) {
-        return;
-    }
-    
-    // Handle specific routes
-    switch ($uri) {
-        case '':
-        case '/':
-        case 'home':
-            redirect(site_url('landing_pages/home'));
-            break;
-            
-        case 'terms':
-            redirect(site_url('landing_pages/terms'));
-            break;
-            
-        case 'privacy':
-            redirect(site_url('landing_pages/privacy'));
-            break;
-            
-        case 'about':
-            redirect(site_url('landing_pages/about'));
-            break;
-            
-        case 'contact':
-            redirect(site_url('landing_pages/contact'));
-            break;
-            
-        case 'refund':
-            redirect(site_url('landing_pages/refund'));
-            break;
-    }
-}
-
-// Simple module - no merge fields needed
+// No admin menu needed for API-only module
+// No custom routes needed - API endpoints are handled directly by the controller
