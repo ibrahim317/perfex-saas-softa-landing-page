@@ -85,22 +85,17 @@ class Api extends App_Controller
     }
     
     /**
-     * Get current rate limit count from cache/database
+     * Get current rate limit count from cache
      */
     private function get_rate_limit_count($cache_key)
     {
-        // Try to get from cache first
-        $cached = $this->cache->get($cache_key);
+        // Try to get from app_object_cache
+        $cached = $this->app_object_cache->get($cache_key);
         if ($cached !== false) {
             return (int)$cached;
         }
         
-        // If not in cache, check database
-        $this->db->where('cache_key', $cache_key);
-        $this->db->where('expires_at >', date('Y-m-d H:i:s'));
-        $result = $this->db->get('tblcache')->row();
-        
-        return $result ? (int)$result->cache_value : 0;
+        return 0;
     }
     
     /**
@@ -108,25 +103,14 @@ class Api extends App_Controller
      */
     private function increment_rate_limit_count($cache_key)
     {
-        $expires_at = date('Y-m-d H:i:s', time() + $this->rate_limit_window);
+        // Get current count
+        $current_count = $this->get_rate_limit_count($cache_key);
         
-        // Try to update existing record
-        $this->db->where('cache_key', $cache_key);
-        $this->db->set('cache_value', 'cache_value + 1', false);
-        $this->db->set('expires_at', $expires_at);
-        $this->db->update('tblcache');
+        // Increment count
+        $new_count = $current_count + 1;
         
-        // If no rows affected, insert new record
-        if ($this->db->affected_rows() === 0) {
-            $this->db->insert('tblcache', [
-                'cache_key' => $cache_key,
-                'cache_value' => '1',
-                'expires_at' => $expires_at
-            ]);
-        }
-        
-        // Also store in cache for faster access
-        $this->cache->save($cache_key, '1', $this->rate_limit_window);
+        // Store in app_object_cache with expiration
+        $this->app_object_cache->set($cache_key, $new_count);
     }
 
     /**
