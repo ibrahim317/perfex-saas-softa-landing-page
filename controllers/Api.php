@@ -3,9 +3,130 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Api extends App_Controller
 {
+    private $rate_limit_requests = 100; // requests per hour
+    private $rate_limit_window = 3600; // 1 hour in seconds
+    
     public function __construct()
     {
         parent::__construct();
+        $this->set_cors_headers();
+        $this->check_rate_limit();
+    }
+    
+    /**
+     * Set CORS headers to allow all origins
+     */
+    private function set_cors_headers()
+    {
+        // Allow all origins
+        header('Access-Control-Allow-Origin: *');
+        
+        // Allow common HTTP methods
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        
+        // Allow common headers
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        
+        // Allow credentials (if needed)
+        header('Access-Control-Allow-Credentials: true');
+        
+        // Cache preflight requests for 1 hour
+        header('Access-Control-Max-Age: 3600');
+        
+        // Handle preflight OPTIONS requests
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(200);
+            exit;
+        }
+    }
+    
+    /**
+     * Check rate limiting based on IP address
+     */
+    private function check_rate_limit()
+    {
+        $client_ip = $this->get_client_ip();
+        $cache_key = 'rate_limit_' . md5($client_ip);
+        
+        // Get current request count
+        $current_requests = $this->get_rate_limit_count($cache_key);
+        
+        if ($current_requests >= $this->rate_limit_requests) {
+            $this->respond_json([
+                'error' => 'Rate limit exceeded',
+                'message' => 'Too many requests. Please try again later.',
+                'retry_after' => $this->rate_limit_window
+            ], 429);
+        }
+        
+        // Increment request count
+        $this->increment_rate_limit_count($cache_key);
+    }
+    
+    /**
+     * Get client IP address
+     */
+    private function get_client_ip()
+    {
+        $ip_keys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR'];
+        
+        foreach ($ip_keys as $key) {
+            if (array_key_exists($key, $_SERVER) === true) {
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+        
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+    
+    /**
+     * Get current rate limit count from cache/database
+     */
+    private function get_rate_limit_count($cache_key)
+    {
+        // Try to get from cache first
+        $cached = $this->cache->get($cache_key);
+        if ($cached !== false) {
+            return (int)$cached;
+        }
+        
+        // If not in cache, check database
+        $this->db->where('cache_key', $cache_key);
+        $this->db->where('expires_at >', date('Y-m-d H:i:s'));
+        $result = $this->db->get('tblcache')->row();
+        
+        return $result ? (int)$result->cache_value : 0;
+    }
+    
+    /**
+     * Increment rate limit count
+     */
+    private function increment_rate_limit_count($cache_key)
+    {
+        $expires_at = date('Y-m-d H:i:s', time() + $this->rate_limit_window);
+        
+        // Try to update existing record
+        $this->db->where('cache_key', $cache_key);
+        $this->db->set('cache_value', 'cache_value + 1', false);
+        $this->db->set('expires_at', $expires_at);
+        $this->db->update('tblcache');
+        
+        // If no rows affected, insert new record
+        if ($this->db->affected_rows() === 0) {
+            $this->db->insert('tblcache', [
+                'cache_key' => $cache_key,
+                'cache_value' => '1',
+                'expires_at' => $expires_at
+            ]);
+        }
+        
+        // Also store in cache for faster access
+        $this->cache->save($cache_key, '1', $this->rate_limit_window);
     }
 
     /**
@@ -19,10 +140,7 @@ class Api extends App_Controller
             // Inline handler to avoid controller instantiation issues
             $api_users = perfex_saas_api_users();
             if (!$api_users || !is_array($api_users)) {
-                header('Content-Type: application/json');
-                set_status_header(404);
-                echo json_encode(['error' => 'No API users found']);
-                exit;
+                $this->respond_json(['error' => 'No API users found'], 404);
             }
 
             $landingUser = null;
@@ -38,10 +156,7 @@ class Api extends App_Controller
             }
 
             if (!$landingUser || empty($landingUser->token)) {
-                header('Content-Type: application/json');
-                set_status_header(404);
-                echo json_encode(['error' => 'Landing API key not found']);
-                exit;
+                $this->respond_json(['error' => 'Landing API key not found'], 404);
             }
 
             // Directly fetch packages internally to avoid proxy/curl issues
@@ -104,19 +219,30 @@ class Api extends App_Controller
                 ];
             }
 
-            header('Content-Type: application/json');
-            set_status_header(200);
-            echo json_encode($package_list);
+            $this->respond_json($package_list, 200);
                 
         } catch (Throwable $th) {
-            return $this->respond_json(['error' => $th->getMessage()], 500);
+            $this->respond_json(['error' => $th->getMessage()], 500);
         }
     }
 
     private function respond_json($data, $status = 200)
     {
+        // Set CORS headers for response
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        header('Access-Control-Allow-Credentials: true');
+        
+        // Set content type and status
         header('Content-Type: application/json');
         set_status_header($status);
+        
+        // Add rate limit headers
+        if ($status === 429) {
+            header('Retry-After: ' . $this->rate_limit_window);
+        }
+        
         echo json_encode($data);
         exit;
     }
